@@ -1,5 +1,5 @@
 // odpowiednio ponazywać interfejsy
-
+// Hello
 interface ObjectOfArrays {
     playerPawns: Array<Element>;
     opponentPawns: Array<Element>;
