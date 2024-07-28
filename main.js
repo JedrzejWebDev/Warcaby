@@ -1,7 +1,5 @@
-// odpowiednio ponazywać interfejsy
 function startGame() {
     var playerPawnsAndOpponentPawns = getPlayerPawnsAndOpponentPawns();
-    // const fields : NodeListOf<Element> = document.querySelectorAll(".field");
     var playerFieldsAndOpponentFields = getPlayerFieldsAndOpponentFields();
     var anObjectWithANumberOfPawns = countThePawns(playerPawnsAndOpponentPawns);
     var isPlayerMovement = true;
@@ -16,7 +14,6 @@ function startGame() {
         ['', 'WRP', '', 'WRP', '', 'WRP', '', 'WRP'],
         ['WRP', '', 'WRP', '', 'WRP', '', 'WRP', ''],
     ];
-    // Funkcja obsługująca ruch gracza i w niej kolejna funkcja obsługująca ruchy niemożliwe do wykonania (poza plansze lub gdy jest możliwość bicia to najpierw trzeba zbić). Czyli trzeba też wykrywanie bicia zrobić. Podczas wszystkich ruchów trzeba zmieniać tablice board
     var lastMarkedField;
     if (isPlayerMovement) {
         playerMovement(isPlayerMovement, playerFieldsAndOpponentFields, isClickedPawn, lastMarkedField);
@@ -32,34 +29,15 @@ function getPlayerPawnsAndOpponentPawns() {
 function getPlayerFieldsAndOpponentFields() {
     var playerFields = [];
     var opponentFields = [];
-    /*
-    for(let i=0; i<fields.length; i++) {
-        if(fields[i].children[0] != undefined && fields[i].children[0].className == "pawnPlayer1") {
-            playerFields[i] = fields[i];
-            playerFields = playerFields.filter(function(playerField) {
-                return playerField != null;
-            })
-        } else if(fields[i].children[0] != undefined && fields[i].children[0].className == "pawnPlayer2") {
-            opponentFields[i] = fields[i];
-            opponentFields = opponentFields.filter(function(opponentField) {
-                return opponentField != null;
-            })
-        }
-    }
-    */
     var playerPawns = document.querySelectorAll(".pawnPlayer1");
-    // console.log(playerPawns[0]); // TU
-    // console.log(playerPawns[0].parentElement); // TU
     var opponentPawns = document.querySelectorAll(".pawnPlayer2");
     for (var i = 0; i < playerPawns.length; i++) {
         playerFields[i] = playerPawns[i].parentElement;
-        // console.log(playerPawns[i].parentElement);
     }
     for (var i = 0; i < opponentPawns.length; i++) {
         opponentFields[i] = opponentPawns[i].parentElement;
     }
     return { playerFields: playerFields, opponentFields: opponentFields };
-    // zapisać niektóre rzeczy krócej w tej funkcji przypisując coś do zmiennych
 }
 function countThePawns(playerPawnsAndOpponentPawns) {
     var numberOfPlayerPawns = playerPawnsAndOpponentPawns.playerPawns.length;
@@ -74,15 +52,13 @@ function playerMovement(isPlayerMovement, playerFieldsAndOpponentFields, isClick
     var columnNumberToWhichICanMakeAMove;
     var rowNumberToWhichICanMakeAMove;
     var theTwoMostRecentlyClickedFields = [];
-    // playerFieldsAndOpponentFields.playerFields = getPlayerFieldsAndOpponentFields().playerFields;
-    // console.log(playerFieldsAndOpponentFields.playerFields);
     playerFieldsAndOpponentFields.playerFields.forEach(function (playerField) {
         playerField.addEventListener('click', function (event) {
-            if (event.currentTarget && event.currentTarget.children[0] != undefined) { // istnieje pole i pionek w nim
+            var aFieldToWhichICanMove;
+            if (event.currentTarget && event.currentTarget.children[0] != undefined) {
                 isClickedPawn = true;
                 lastMarkedField = event.currentTarget;
                 var lastMarkedPawn = event.currentTarget.children[0];
-                lastMarkedField.style.backgroundColor = "rgb(68,68,0)"; // 68,68,0 = #444400;   102,102,0 = #666600;
                 theTwoMostRecentlyClickedFields.push(lastMarkedField);
                 if (theTwoMostRecentlyClickedFields.length == 3) {
                     theTwoMostRecentlyClickedFields.shift();
@@ -100,7 +76,6 @@ function playerMovement(isPlayerMovement, playerFieldsAndOpponentFields, isClick
                     return;
                 }
             });
-            // Od tąd
             var firstColumnPlayerPawns = getPlayerPawnsFromTheFirstColumn();
             var filteredFirstColumnPlayerPawns = firstColumnPlayerPawns.filter(function (el) {
                 return el != null;
@@ -115,6 +90,30 @@ function playerMovement(isPlayerMovement, playerFieldsAndOpponentFields, isClick
                 if (event.target == filteredFirstColumnPlayerPawns[0] || event.target == filteredFirstColumnPlayerPawns[0].children[0]) {
                     isMarkedPawnFromTheFirstColumn = true;
                     isMarkedPawnFromTheLastColumn = false;
+                    if (event.target instanceof HTMLElement && event.target.dataset.row != undefined && event.target.dataset.col != undefined) {
+                        var rowOfFieldToWhichICanMove = Number((event.target.dataset.row).slice(1)) - 1;
+                        var colOfFieldToWhichICanMove = Number((event.target.dataset.col).slice(1)) + 1;
+                        aFieldToWhichICanMove = document.querySelector("[data-col=c" + colOfFieldToWhichICanMove + "][data-row=r" + rowOfFieldToWhichICanMove + "]");
+                        if (aFieldToWhichICanMove != null) {
+                            if (aFieldToWhichICanMove.children[0] == undefined) {
+                                lastMarkedField.style.backgroundColor = "rgb(68,68,0)";
+                            }
+                        }
+                        uncheckingTheFieldICanMoveTo(aFieldToWhichICanMove, lastMarkedField);
+                    }
+                    else if (event.target instanceof HTMLElement && event.target.className == "pawnPlayer1" && event.target.parentElement != null) {
+                        if (event.target.parentElement.dataset.row != undefined && event.target.parentElement.dataset.col != undefined) {
+                            var rowOfFieldToWhichICanMove = Number((event.target.parentElement.dataset.row).slice(1)) - 1;
+                            var colOfFieldToWhichICanMove = Number((event.target.parentElement.dataset.col).slice(1)) + 1;
+                            aFieldToWhichICanMove = document.querySelector("[data-col=c" + colOfFieldToWhichICanMove + "][data-row=r" + rowOfFieldToWhichICanMove + "]");
+                            if (aFieldToWhichICanMove != null) {
+                                if (aFieldToWhichICanMove.children[0] == undefined) {
+                                    event.target.parentElement.style.backgroundColor = "rgb(68,68,0)";
+                                }
+                            }
+                            uncheckingTheFieldICanMoveTo(aFieldToWhichICanMove, lastMarkedField);
+                        }
+                    }
                 }
             }
             if (filteredFirstColumnPlayerPawns[1] != undefined) {
@@ -139,6 +138,30 @@ function playerMovement(isPlayerMovement, playerFieldsAndOpponentFields, isClick
                 if (event.target == filteredLastColumnPlayerPawns[0] || event.target == filteredLastColumnPlayerPawns[0].children[0]) {
                     isMarkedPawnFromTheFirstColumn = false;
                     isMarkedPawnFromTheLastColumn = true;
+                    if (event.target instanceof HTMLElement && event.target.dataset.row != undefined && event.target.dataset.col != undefined) {
+                        var rowOfFieldToWhichICanMove = Number((event.target.dataset.row).slice(1)) - 1;
+                        var colOfFieldToWhichICanMove = Number((event.target.dataset.col).slice(1)) - 1;
+                        aFieldToWhichICanMove = document.querySelector("[data-col=c" + colOfFieldToWhichICanMove + "][data-row=r" + rowOfFieldToWhichICanMove + "]");
+                        if (aFieldToWhichICanMove != null) {
+                            if (aFieldToWhichICanMove.children[0] == undefined) {
+                                lastMarkedField.style.backgroundColor = "rgb(68,68,0)";
+                            }
+                        }
+                        uncheckingTheFieldICanMoveTo(aFieldToWhichICanMove, lastMarkedField);
+                    }
+                    else if (event.target instanceof HTMLElement && event.target.className == "pawnPlayer1" && event.target.parentElement != null) {
+                        if (event.target.parentElement.dataset.row != undefined && event.target.parentElement.dataset.col != undefined) {
+                            var rowOfFieldToWhichICanMove = Number((event.target.parentElement.dataset.row).slice(1)) - 1;
+                            var colOfFieldToWhichICanMove = Number((event.target.parentElement.dataset.col).slice(1)) - 1;
+                            aFieldToWhichICanMove = document.querySelector("[data-col=c" + colOfFieldToWhichICanMove + "][data-row=r" + rowOfFieldToWhichICanMove + "]");
+                            if (aFieldToWhichICanMove != null) {
+                                if (aFieldToWhichICanMove.children[0] == undefined) {
+                                    event.target.parentElement.style.backgroundColor = "rgb(68,68,0)";
+                                }
+                            }
+                            uncheckingTheFieldICanMoveTo(aFieldToWhichICanMove, lastMarkedField);
+                        }
+                    }
                 }
             }
             if (filteredLastColumnPlayerPawns[1] != undefined) {
@@ -160,7 +183,7 @@ function playerMovement(isPlayerMovement, playerFieldsAndOpponentFields, isClick
                 }
             }
             if (isMarkedPawnFromTheFirstColumn) {
-                movementOfThePlayerPawnFromTheLeftColumn(event.target);
+                movementOfThePlayerPawnFromTheLeftColumn(event.target, isMarkedPawnFromTheFirstColumn);
             }
             else if (isMarkedPawnFromTheLastColumn) {
             }
@@ -198,7 +221,22 @@ function getPlayerPawnsFromTheLastColumn() {
     }
     return lastColumnPlayerPawns2;
 }
-function movementOfThePlayerPawnFromTheLeftColumn(clickedField) {
+function changeColorOfFieldICanMoveTo(aFieldToWhichICanMove) {
+    if (aFieldToWhichICanMove != null && aFieldToWhichICanMove.children[0] == undefined) {
+        aFieldToWhichICanMove.style.backgroundColor = 'rgb(68,68,0)';
+    }
+}
+function moveToFieldToWhichICanMove(aFieldToWhichICanMove, clickedField, isMarkedPawnFromTheFirstColumn) {
+    if (aFieldToWhichICanMove != null && clickedField != null) {
+        aFieldToWhichICanMove.addEventListener("click", function (event) {
+            if (isMarkedPawnFromTheFirstColumn) {
+                aFieldToWhichICanMove.appendChild(clickedField.children[0]);
+                aFieldToWhichICanMove.style.backgroundColor = 'rgb(102,102,0)';
+            }
+        });
+    }
+}
+function movementOfThePlayerPawnFromTheLeftColumn(clickedField, isMarkedPawnFromTheFirstColumn) {
     if (clickedField != null && clickedField instanceof HTMLElement) {
         if (clickedField.className == "pawnPlayer1") {
             clickedField = clickedField.parentElement;
@@ -209,20 +247,19 @@ function movementOfThePlayerPawnFromTheLeftColumn(clickedField) {
             var rowOfFieldToWhichICanMove = Number((clickedField.dataset.row).slice(1)) - 1;
             var colOfFieldToWhichICanMove = Number((clickedField.dataset.col).slice(1)) + 1;
             var aFieldToWhichICanMove = document.querySelector("[data-col=c" + colOfFieldToWhichICanMove + "][data-row=r" + rowOfFieldToWhichICanMove + "]");
-            console.log(aFieldToWhichICanMove);
+            changeColorOfFieldICanMoveTo(aFieldToWhichICanMove);
+            moveToFieldToWhichICanMove(aFieldToWhichICanMove, clickedField, isMarkedPawnFromTheFirstColumn);
         }
     }
 }
-function uncheckingTheFieldICanMoveTo(aFieldThatICanMoveToAndWantToUncheck, lastClickedField, canIMove) {
+function uncheckingTheFieldICanMoveTo(aFieldThatICanMoveToAndWantToUncheck, lastClickedField) {
     document.addEventListener("click", function (e) {
-        if (e.target != lastClickedField && e.target != lastClickedField.children[0] && e.target != aFieldThatICanMoveToAndWantToUncheck && e.target != aFieldThatICanMoveToAndWantToUncheck.children[0]) { // I e.target różne od pola na które się ruszyłem (chyba fieldToWhichICanMove). Wtedy będę mógł odkomentować to na dole!!!!! (Mogą pojawić się problemy jak będę się poruszać damką z powrotem na pola na których byłem CHYBA)
+        if (e.target != lastClickedField && e.target != lastClickedField.children[0] && e.target != aFieldThatICanMoveToAndWantToUncheck && e.target != aFieldThatICanMoveToAndWantToUncheck.children[0]) {
             aFieldThatICanMoveToAndWantToUncheck.style.backgroundColor = "#666600";
-            canIMove = false;
         }
     });
 }
 function endOfTheGame(anObjectWithANumberOfPawns) {
-    // Usunąć możliwość dalszej gry (dalszego robienia ruchów na obecnej planszy)
     if (anObjectWithANumberOfPawns.numberOfPlayerPawns == 0) {
         console.log("Zwyci\u0119\u017Cy\u0142 przeciwnik");
     }
@@ -230,4 +267,3 @@ function endOfTheGame(anObjectWithANumberOfPawns) {
         console.log("Zwyci\u0119\u017Cy\u0142 gracz");
     }
 }
-// Teraz zrobić tak że mogę wykonać ruch tylko wtedy jeśli pole jest podświetlone bo jeżeli odznacze pionek którym mogłem się ruszyć i zaznacze inny i kliknę na pole na które mogłem się poruszyć pionek którym mogłem się przenieść zostanie przeniesiony
